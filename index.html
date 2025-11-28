@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityCare Hospital</title>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f5fdf7;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #0b6e4f;
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.3rem;
+    }
+
+    header p {
+      margin-top: 10px;
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .hero img {
+      width: 80%;
+      max-width: 800px;
+      border-radius: 16px;
+      box-shadow: 0px 5px 18px rgba(0, 0, 0, 0.15);
+    }
+
+    .hero h2 {
+      color: #0b6e4f;
+      margin-top: 25px;
+      font-size: 1.9rem;
+    }
+
+    .hero p {
+      max-width: 600px;
+      margin: 10px auto;
+      font-size: 1rem;
+      color: #555;
+    }
+
+    .chat-hint {
+      text-align: center;
+      margin-top: 35px;
+      font-size: 1.1rem;
+      color: #444;
+    }
+
+    footer {
+      margin-top: 60px;
+      padding: 20px;
+      text-align: center;
+      background: #eaf7ef;
+      font-size: 0.9rem;
+      color: #606060;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>CityCare Hospital</h1>
+    <p>Your health. Our priority. 💚</p>
+  </header>
+
+  <section class="hero">
+    <img
+      src="https://img.freepik.com/free-photo/hospital-building_1127-3375.jpg?w=1380&t=st=1732617850~exp=1732618450~hmac=dummy"
+      alt="Hospital Building">
+    <h2>Welcome to CityCare Hospital</h2>
+    <p>We are committed to providing compassionate healthcare, advanced treatment, and continuous support for every
+      patient and family.</p>
+  </section>
+
+  <div class="chat-hint">
+    💬 Chat with our virtual assistant below for appointments or support.
+  </div>
+
+  <footer>
+    © 2025 CityCare Hospital · All Rights Reserved
+  </footer>
+
+  <script>
+    let temperature = null; // global variable so chat can use it
+
+    // Fetch Weather
+    function getWeather() {
+      const apiKey = "d08a08a34bb64ee2b21121009252111";
+      const city = "Delhi, India";
+
+      const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${encodeURIComponent(city)}`;
+
+      return fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          temperature = data.current.temp_c;
+          console.log("Temperature in", city, ":", temperature, "°C");
+        })
+        .catch(error => console.error("Error fetching weather:", error));
+    }
+
+    // Init Salesforce Messaging
+    function initEmbeddedMessaging() {
+      try {
+        embeddedservice_bootstrap.settings.language = 'en_US';
+        window.addEventListener("onEmbeddedMessageSent", (event) => {
+          console.log("Raw Event:", event);
+
+          // Convert JSON string to object
+          const payload = JSON.parse(event.detail.conversationEntry.entryPayload);
+
+          //Extract text
+          const messageText = payload.abstractMessage?.staticContent?.text;
+
+          console.log("Extracted text:", messageText);
+
+          if (messageText.includes("Case has been created for you")) {
+            console.log('Chat Transfered');
+            //embeddedservice_bootstrap.utilAPI.sendTextMessage('Stop');
+
+            // Call the CXone script when condition is true
+            const match = messageText.match(/500\w{15}/);
+            let caseId = null;
+            if (match) {
+              caseId = match ? match[0] : null;
+              console.log("Extracted Case Id:", caseId);
+            } else {
+              console.log("No Case Id found");
+            }
+            startCxoneChat(caseId);
+            document.getElementById('embedded-messaging').style.display = 'none'
+            //embeddedservice_bootstrap.utilAPI.hideChatButton();
+          }
+        });
+
+        embeddedservice_bootstrap.init(
+          '00DdL00000fWhmz',
+          'Nuffield_Health_3',
+          'https://orgfarm-fc63a0ccc4-dev-ed.develop.my.site.com/ESWNuffieldHealth31764046308186',
+          {
+            scrt2URL: 'https://orgfarm-fc63a0ccc4-dev-ed.develop.my.salesforce-scrt.com'
+          }
+        );
+
+        // When widget is ready - attach weather
+        window.addEventListener("onEmbeddedMessagingReady", () => {
+          console.log("Chat ready. Sending temperature...");
+
+          embeddedservice_bootstrap.prechatAPI.setHiddenPrechatFields({
+            "Temp": temperature.toString()
+          });
+
+          console.log("Temperature added:", temperature);
+        });
+      } catch (err) {
+        console.error("Error loading Embedded Messaging:", err);
+      }
+    }
+
+    function startCxoneChat(caseId) {
+  (function (n, u) {
+    window.CXoneDfo = n;
+    window[n] = window[n] || function () {
+      (window[n].q = window[n].q || []).push(arguments);
+    };
+    window[n].u = u;
+
+    const e = document.createElement("script");
+    e.type = "module";
+    e.src = `https://web-modules-de-eu1.niceincontact.com/loader/1/loader.js?caseId=${caseId}`;
+    document.head.appendChild(e);
+  })("cxone", "https://web-modules-de-eu1.niceincontact.com/loader/1/loader.js");
+
+  // Wait for script to load
+  setTimeout(() => {
+    cxone("init", "1150", "chat_8588f97c-23cc-4dee-b24c-35e612849e91");
+    cxone("chat", "init", 1150, "chat_8588f97c-23cc-4dee-b24c-35e612849e91");
+
+    cxone("chat", "setCustomerName", "Steven Emerson");
+    cxone("chat", "setCustomField", "saeccdept", "Sales");
+
+    cxone("chat", "sendFirstMessageAutomatically", "Chat has been initiated");
+    cxone("chat", "hideFirstSentMessage", false);
+    cxone("chat", "hidePreSurvey");
+
+    // Listen for when CXone chat window actually opens
+    cxone("chat", "onOpened", function () {
+      console.log("CXone Chat is fully opened — now hiding Embedded Messaging");
+      document.getElementById("embedded-messaging").style.display = "none";
+    });
+
+    cxone("chat", "openChatWindow");
+    cxone("chat", "autoStartSession");
+
+    console.log("CXone Chat Started.");
+  }, 2000);
+}
+
+    // Run weather first then load chat
+    getWeather().then(() => {
+      const script = document.createElement("script");
+      script.src = "https://orgfarm-fc63a0ccc4-dev-ed.develop.my.site.com/ESWNuffieldHealth31764046308186/assets/js/bootstrap.min.js";
+      script.onload = initEmbeddedMessaging;
+      document.body.appendChild(script);
+    });
+  </script>
+
+</body>
+
+</html>
