@@ -153,9 +153,14 @@
             } else {
               console.log("No Case Id found");
             }
+             // startCxoneChat(caseId);
+            // document.getElementById('embedded-messaging').style.display = 'none'
+            // //embeddedservice_bootstrap.utilAPI.hideChatButton();
+            setTimeout(() => {
             startCxoneChat(caseId);
-            document.getElementById('embedded-messaging').style.display = 'none'
-            //embeddedservice_bootstrap.utilAPI.hideChatButton();
+              document.getElementById('embedded-messaging').style.display = 'none';
+              //embeddedservice_bootstrap.utilAPI.hideChatButton();
+              }, 3000); // 3000 ms = 3 seconds
           }
         });
 
